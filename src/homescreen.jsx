@@ -23,7 +23,7 @@ export default function HomeScreen() {
     return () => window.removeEventListener("resize", update);
   }, []);
 
-  // enforce permanent auto-rotate
+  // configure globe controls + zoom
   useEffect(() => {
     const globe = globeRef.current;
     if (!globe || typeof globe.controls !== "function") return;
@@ -32,38 +32,34 @@ export default function HomeScreen() {
     if (!controls) return;
 
     controls.autoRotate = true;
-    controls.autoRotateSpeed = 1.2;
+    controls.autoRotateSpeed = 0.6; // slower rotation for better readability
     controls.enableDamping = true;
 
+    // bring camera closer (makes globe look bigger)
+    globe.pointOfView({ altitude: 1.4 }, 2000); // lower altitude = larger globe
+
+    // ensure continuous rotation
     let raf = 0;
     const tick = () => {
       if (!controls.autoRotate) {
         controls.autoRotate = true;
-        controls.autoRotateSpeed = 1.2;
+        controls.autoRotateSpeed = 0.6;
       }
       controls.update();
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
 
-    const ensureRotate = () => {
-      controls.autoRotate = true;
-      controls.autoRotateSpeed = 1.2;
-    };
-    controls.addEventListener?.("start", ensureRotate);
-    controls.addEventListener?.("end", ensureRotate);
-    controls.addEventListener?.("change", ensureRotate);
-
-    return () => {
-      cancelAnimationFrame(raf);
-      controls.removeEventListener?.("start", ensureRotate);
-      controls.removeEventListener?.("end", ensureRotate);
-      controls.removeEventListener?.("change", ensureRotate);
-    };
+    return () => cancelAnimationFrame(raf);
   }, []);
 
-  const handleLogin = () => alert("Log in clicked");
-  const handleAskQuestion = () => alert("Ask a Question clicked");
+  const handleLogin = () => {
+    alert("Log in clicked");
+  };
+
+  const handleAskQuestion = () => {
+    alert("Ask a Question clicked");
+  };
 
   return (
     <div style={styles.app}>
@@ -96,7 +92,7 @@ export default function HomeScreen() {
           pointLat="lat"
           pointLng="lng"
           pointColor={() => "aqua"}
-          pointAltitude={0.05}
+          pointAltitude={0.08}
           pointLabel={(d) => `${d.id}\nTemp: ${d.temp}\nSalinity: ${d.sal}`}
         />
       </div>
@@ -107,11 +103,7 @@ export default function HomeScreen() {
         <p style={styles.heroSubtitle}>
           Ask questions in plain English and see ARGO float data on the globe.
         </p>
-        <button
-          style={styles.askBtn}
-          onClick={handleAskQuestion}
-          aria-label="Ask a Question"
-        >
+        <button style={styles.askBtn} onClick={handleAskQuestion}>
           Ask a Question
         </button>
       </main>
@@ -119,7 +111,6 @@ export default function HomeScreen() {
   );
 }
 
-// Styles
 const styles = {
   app: {
     position: "relative",
@@ -140,12 +131,12 @@ const styles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: "18px 24px", // ⬆ increased padding
+    padding: "16px 24px", // increased size
     background: "#0b1220",
     borderBottom: "1px solid rgba(255,255,255,0.08)",
   },
-  brand: { fontWeight: 700, fontSize: 22, letterSpacing: 0.4 }, // ⬆ increased font size
-  actions: { display: "flex", gap: 16, alignItems: "center" }, // ⬆ more spacing
+  brand: { fontWeight: 700, fontSize: 20, letterSpacing: 0.3 },
+  actions: { display: "flex", gap: 16, alignItems: "center" },
   linkBtn: {
     background: "transparent",
     border: "none",
@@ -178,34 +169,33 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     textAlign: "center",
-    pointerEvents: "auto",
+    pointerEvents: "none",
     padding: "0 16px",
   },
   heroTitle: {
-    fontSize: 46,
+    fontSize: 48,
     fontWeight: 800,
     margin: 0,
     lineHeight: 1.15,
     textShadow: "0 2px 12px rgba(0,0,0,0.55)",
   },
   heroSubtitle: {
-    marginTop: 12,
-    fontSize: 18,
+    marginTop: 14,
+    fontSize: 20,
     color: "#d1d5db",
     textShadow: "0 1px 8px rgba(0,0,0,0.45)",
   },
   askBtn: {
     marginTop: 24,
-    background: "#10b981", // teal green for action contrast
-    border: "none",
+    background: "#10b981",
+    border: "1px solid #065f46",
     color: "#fff",
     padding: "12px 20px",
     borderRadius: 10,
-    fontWeight: 600,
     fontSize: 16,
+    fontWeight: 600,
     cursor: "pointer",
-    transition: "transform 0.2s, background 0.2s",
+    pointerEvents: "auto",
+    boxShadow: "0 4px 14px rgba(0,0,0,0.4)",
   },
 };
-
-
