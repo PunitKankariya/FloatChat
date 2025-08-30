@@ -16,7 +16,9 @@
     "lucide-react": "^0.542.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "three": "^0.179.1"
+    "react-globe.gl": "^2.35.0",
+    "three": "^0.179.1",
+    "three-globe": "^2.44.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",
