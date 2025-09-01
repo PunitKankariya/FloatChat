@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import Globe from "react-globe.gl";
 
-export default function HomeScreen() {
+export default function HomeScreen({ onNavigateToChat }) {
   const globeRef = useRef(null);
   const [points, setPoints] = useState([]);
   const [size, setSize] = useState({ w: 0, h: 0 });
@@ -58,7 +58,7 @@ export default function HomeScreen() {
   };
 
   const handleAskQuestion = () => {
-    alert("Ask a Question clicked");
+    onNavigateToChat();
   };
 
   return (
@@ -67,7 +67,7 @@ export default function HomeScreen() {
       <nav style={styles.nav} aria-label="Primary">
         <div style={styles.brand}>ARGO Explorer</div>
         <div style={styles.actions}>
-          <button style={styles.linkBtn} aria-label="Open Chatbot">
+          <button style={styles.linkBtn} onClick={onNavigateToChat} aria-label="Open Chatbot">
             Chatbot
           </button>
           <button style={styles.linkBtn} aria-label="About the app">
