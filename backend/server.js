@@ -24,6 +24,11 @@ const PORT = 5000;
 app.use(cors({ origin: "http://localhost:5173" }));
 app.use(express.json());
 
+// Root route
+app.get("/", (req, res) => {
+  res.redirect('/api/test');
+});
+
 // Test route
 app.get("/api/test", (req, res) => {
   res.json({ message: "Backend working fine!" });
