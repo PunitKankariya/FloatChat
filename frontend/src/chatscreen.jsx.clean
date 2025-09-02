@@ -107,7 +107,7 @@ export default function ChatScreen() {
       setActiveTab("graph")
       return "Switched to the temperature trend graph. Hover to inspect monthly values."
     }
-    return "I can show nearest floats on the map or switch to the temperature graph. Try: “Nearest floats” or “Show temp graph”."
+    return "I can show nearest floats on the map or switch to the temperature graph. Try: 'Nearest floats' or 'Show temp graph'."
   }
 
   async function handleSend() {
@@ -116,11 +116,41 @@ export default function ChatScreen() {
     addMessage("user", text)
     setInput("")
     setIsLoading(true)
-    await new Promise((r) => setTimeout(r, 500))
-    const reply = respondSmart(text)
-    await new Promise((r) => setTimeout(r, 500))
-    addMessage("bot", reply)
-    setIsLoading(false)
+    
+    // First try the smart response
+    const smartReply = respondSmart(text)
+    if (smartReply) {
+      await new Promise(r => setTimeout(r, 1000)) // Simulate thinking
+      addMessage("bot", smartReply)
+      setIsLoading(false)
+      return
+    }
+    
+    // If no smart response, use the API
+    try {
+      const response = await fetch('http://localhost:8000/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: text,
+          chat_type: chatType,
+        }),
+      });
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        addMessage("bot", data.response)
+      } else {
+        addMessage("bot", `Error: ${data.error || 'Something went wrong'}`)
+      }
+    } catch (error) {
+      addMessage("bot", `Connection error: ${error.message}`)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   function handleKeyDown(e) {
@@ -132,82 +162,33 @@ export default function ChatScreen() {
 
   function quickAsk(text) {
     if (isLoading) return
-    addMessage("user", text)
-    setInput("")
-    setIsLoading(true)
-    setTimeout(() => {
-      const reply = respondSmart(text)
-      setTimeout(() => {
-        addMessage("bot", reply)
-        setIsLoading(false)
-      }, 400)
-    }, 300)
+    setInput(text)
+    // Small delay to allow the input to update
+    setTimeout(() => handleSend(), 100)
   }
-
-  const tempLegendLabel = `Temp at ${selectedFloat?.name}`
 
   // Fetch available chat types on component mount
   useEffect(() => {
-    fetchChatTypes();
-  }, []);
-
-  const fetchChatTypes = async () => {
-    try {
-      const response = await fetch('http://localhost:8000/api/chat-types');
-      const data = await response.json();
-      setAvailableChatTypes(data.chat_types);
-    } catch (error) {
-      console.error('Error fetching chat types:', error);
-    }
-  };
-
-  const sendMessage = async () => {
-    if (!input.trim() || isLoading) return;
-
-    const userMessage = input.trim();
-    setInput("");
-    setIsLoading(true);
-
-    // Add user message to chat
-    setMessages(prev => [...prev, { type: "user", content: userMessage }]);
-
-    try {
-      const response = await fetch('http://localhost:8000/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: userMessage,
-          chat_type: chatType,
-          app_functionality: "Chat"
-        })
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        setMessages(prev => [...prev, { type: "bot", content: data.response }]);
-      } else {
-        setMessages(prev => [...prev, { type: "bot", content: `Error: ${data.error || 'Something went wrong'}` }]);
+    const fetchChatTypes = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/api/chat-types')
+        const data = await response.json()
+        if (data.chat_types && data.chat_types.length > 0) {
+          setAvailableChatTypes(data.chat_types)
+        }
+      } catch (error) {
+        console.error('Error fetching chat types:', error)
       }
-    } catch (error) {
-      setMessages(prev => [...prev, { type: "bot", content: `Connection error: ${error.message}` }]);
-    } finally {
-      setIsLoading(false);
     }
-  };
+    
+    fetchChatTypes()
+  }, [])
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
+  const tempLegendLabel = `Temp at ${selectedFloat?.name}`
 
   return (
     <div style={styles.viewport}>
-      {/* Leaflet dark styles (lighter variant to match UI) */}
+      {/* Leaflet dark styles */}
       <style>{`
         .leaflet-container { background: #1F2937; }
         .leaflet-control-zoom a {
@@ -314,21 +295,21 @@ export default function ChatScreen() {
           <div style={styles.inputArea}>
             <input
               style={styles.input}
-              placeholder="Ask me anything..."
+              placeholder="Ask me about the ocean data..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown} // Changed from onKeyPress to onKeyDown for better compatibility
+              onKeyDown={handleKeyDown}
               aria-label="Message input"
               disabled={isLoading}
             />
             <button
               style={{
                 ...styles.sendButton,
-                opacity: isLoading || !input.trim() ? 0.7 : 1,
-                cursor: isLoading || !input.trim() ? "not-allowed" : "pointer",
+                opacity: isLoading ? 0.7 : 1,
+                cursor: isLoading ? "not-allowed" : "pointer",
               }}
-              onClick={sendMessage} // Changed from handleSend to sendMessage
-              disabled={isLoading || !input.trim()}
+              onClick={handleSend}
+              disabled={isLoading}
               aria-label="Send message"
             >
               {isLoading ? 'Sending...' : 'Send'}
@@ -392,30 +373,33 @@ export default function ChatScreen() {
           <div style={styles.panel}>
             {activeTab === "map" ? (
               <div style={styles.mapWrap}>
-                <MapContainer center={LAK_CENTER} zoom={6} style={styles.mapCanvas}>
+                <MapContainer 
+                  center={LAK_CENTER} 
+                  zoom={6} 
+                  style={styles.mapCanvas}
+                  zoomControl={false}
+                >
                   {/* Softer dark basemap */}
                   <TileLayer
-                    url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
-                    attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
+                    url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                   />
                   {floats.map((f) => (
                     <Marker 
-                      key={f.id} 
+                      key={f.id}
                       position={f.coords}
                       eventHandlers={{
-                        click: () => setSelectedFloatId(f.id)
+                        click: () => {
+                          setSelectedFloatId(f.id)
+                          if (activeTab !== "map") setActiveTab("graph")
+                        }
                       }}
                     >
                       <Popup>
                         <div style={{ minWidth: 160 }}>
                           <div style={{ fontWeight: 600, marginBottom: 4 }}>{f.name}</div>
                           <div>Latest SST: {f.latestTemp.toFixed(1)}°C</div>
-                          <button 
-                            style={styles.popupButton} 
-                            onClick={() => quickAsk(`Show temp graph for ${f.name}`)}
-                          >
-                            Show Trend
-                          </button>
+                          <div>Location: {f.coords[0].toFixed(2)}, {f.coords[1].toFixed(2)}</div>
                         </div>
                       </Popup>
                     </Marker>
@@ -536,6 +520,26 @@ const styles = {
     minWidth: 0,
     backgroundColor: "#1F2937",
   },
+  chatTypeSelector: {
+    padding: "12px",
+    borderBottom: "1px solid #374151",
+  },
+  chatTypeLabel: {
+    display: "block",
+    marginBottom: 4,
+    fontSize: 12,
+    color: "#9CA3AF",
+    fontWeight: 500,
+  },
+  chatTypeSelect: {
+    width: "100%",
+    padding: "8px 12px",
+    backgroundColor: "#1F2937",
+    color: "#F9FAFB",
+    border: "1px solid #4B5563",
+    borderRadius: "4px",
+    outline: "none",
+  },
   chatScroll: {
     flex: 1,
     overflowY: "auto",
@@ -619,119 +623,78 @@ const styles = {
     width: "420px",
     display: "flex",
     flexDirection: "column",
-    backgroundColor: "#334155",
+    backgroundColor: "#1F2937",
     borderLeft: "1px solid #475569",
+    overflow: "hidden",
   },
   tabs: {
     display: "flex",
     gap: "8px",
     padding: "10px",
     borderBottom: "1px solid #475569",
-    backgroundColor: "#334155",
+    backgroundColor: "#1F2937",
   },
   tab: {
     flex: 1,
-    border: "1px solid #475569",
-    borderRadius: "8px",
     padding: "8px 12px",
+    borderRadius: "6px",
+    border: "1px solid #475569",
+    background: "transparent",
+    color: "#E5E7EB",
     cursor: "pointer",
-    color: "white",
+    fontSize: "14px",
     fontWeight: 500,
-    transition: "background 0.2s ease, border-color 0.2s ease",
+    transition: "all 0.2s ease",
   },
-
   floatRow: {
     display: "flex",
-    gap: 8,
-    padding: "10px",
+    gap: "8px",
+    padding: "12px",
     borderBottom: "1px solid #475569",
-    flexWrap: "wrap",
+    backgroundColor: "#1F2937",
+    overflowX: "auto",
   },
   floatChip: {
+    padding: "6px 12px",
+    borderRadius: "999px",
     border: "1px solid #475569",
-    color: "#FFFFFF",
-    padding: "6px 10px",
-    borderRadius: 999,
-    cursor: "pointer",
-    fontSize: 13,
     background: "transparent",
+    color: "#E5E7EB",
+    cursor: "pointer",
+    fontSize: "14px",
+    whiteSpace: "nowrap",
+    transition: "all 0.2s ease",
   },
-
   panel: {
     flex: 1,
-    padding: "12px",
-    width: "100%",
+    position: "relative",
     overflow: "hidden",
-    display: "flex",
-    flexDirection: "column",
-    gap: 12,
   },
-
   mapWrap: {
-    flex: 1,
-    minHeight: 280,
-    borderRadius: 12,
-    overflow: "hidden",
-    border: "1px solid #475569",
-    background: "#1F2937",
+    height: "100%",
+    position: "relative",
   },
-  mapCanvas: { width: "100%", height: "100%" },
-
-  popupButton: {
-    background: "#2563EB",
-    color: "#FFFFFF",
-    border: "none",
-    borderRadius: 6,
-    padding: "6px 8px",
-    cursor: "pointer",
+  mapCanvas: {
+    height: "100%",
+    width: "100%",
   },
-
   graphWrap: {
+    height: "100%",
     display: "flex",
     flexDirection: "column",
-    flex: 1,
-    minHeight: 280,
-    borderRadius: 12,
-    overflow: "hidden",
-    border: "1px solid #475569",
-    background: "#1F2937",
+    padding: "16px",
   },
   graphHeader: {
-    padding: "12px 12px 0 12px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 12,
+    marginBottom: "16px",
   },
-  graphTitle: { fontWeight: 600 },
-  graphMeta: { color: "#FFFFFF" },
-  chatTypeSelector: {
-    padding: "12px",
-    borderBottom: "1px solid #374151",
-    backgroundColor: "#1F2937",
-    display: "flex",
-    alignItems: "center",
-    gap: "12px"
+  graphTitle: {
+    fontSize: "16px",
+    fontWeight: 600,
+    marginBottom: "4px",
+    color: "#F9FAFB",
   },
-  chatTypeLabel: {
+  graphMeta: {
     fontSize: "14px",
-    fontWeight: "500",
-    color: "#9CA3AF"
+    color: "#9CA3AF",
   },
-  chatTypeSelect: {
-    flex: 1,
-    padding: "6px 10px",
-    borderRadius: "6px",
-    border: "1px solid #374151",
-    backgroundColor: "#111827",
-    color: "white",
-    fontSize: "14px",
-    outline: "none"
-  },
-  loadingDots: {
-    display: "flex",
-    alignItems: "center",
-    gap: "4px",
-    color: "#9CA3AF"
-  }
 }
