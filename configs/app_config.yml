@@ -6,16 +6,27 @@ directories:
   persist_directory: data/chroma
 
 llm_config:
-    agent_llm_system_role: "Given the following user question, corresponding SQL query, and SQL result, answer the user question.\n
-    Question: {question}\n
-    SQL Query: {query}\n
-    SQL Result: {result}\n
-    Answer: 
+    agent_llm_system_role: "Given the following user question, corresponding SQL query, and SQL result, answer the user question.\n    Question: {question}\n    SQL Query: {query}\n    SQL Result: {result}\n    Answer: 
     "
     rag_llm_system_role: "You will recieve the user's question along with the search results of that question over a database. Give the user the proper answer."
     engine: "gemini-1.5-flash"
     temperature: 0.0
+    
+    # Google API Settings
+    google_generative_ai_enabled: true
+    
+    # Embedding settings with fallback to local
+    use_local_embeddings: false  # Will fall back to local if Google API fails
+    embedding_model: "models/embedding-001"  # Google's embedding model
+    local_embedding_model: "sentence-transformers/all-MiniLM-L6-v2"  # Local fallback model
+    
+    # Rate limiting and batching
+    batch_size: 10  # Process embeddings in smaller batches
+    max_retries: 3  # Number of retries for API calls
+    request_delay: 1.0  # Delay between batch requests in seconds
+    
+    # Note: Make sure to set the GOOGLE_API_KEY environment variable
 
 rag_config:
-  collection_name: titanic_small
+  collection_name: ocean_2
   top_k: 1

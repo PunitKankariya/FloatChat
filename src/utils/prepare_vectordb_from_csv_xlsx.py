@@ -85,18 +85,43 @@ class PrepareVectorDBFromTabularData:
         """
         Inject the prepared data into ChromaDB.
         
-        Raises an error if the collection_name already exists in ChromaDB.
-        The method prints a confirmation message upon successful data injection.
+        Deletes any existing collection and creates a new one with the correct
+        embedding dimensions.
         """
-        collection = self.APPCFG.chroma_client.create_collection(name=self.APPCFG.collection_name)
+        # Delete the collection if it exists
+        try:
+            self.APPCFG.chroma_client.delete_collection(name=self.APPCFG.collection_name)
+            print(f"Deleted existing collection: {self.APPCFG.collection_name}")
+        except Exception as e:
+            print(f"No existing collection to delete or error deleting: {str(e)}")
+        
+        # Get the embedding dimension from the first embedding
+        if not self.embeddings:
+            raise ValueError("No embeddings available to determine dimension")
+        
+        embedding_dimension = len(self.embeddings[0])
+        print(f"Using embedding dimension: {embedding_dimension}")
+        
+        # Create a new collection with the correct embedding function
+        collection = self.APPCFG.chroma_client.create_collection(
+            name=self.APPCFG.collection_name,
+            embedding_function=self.APPCFG.embedding_function,
+            metadata={"embedding_dimension": embedding_dimension}
+        )
+        
+        # Add the documents with their embeddings
         collection.add(
             documents=self.docs,
             metadatas=self.metadatas,
             embeddings=self.embeddings,
             ids=self.ids
         )
-        print("==============================")
-        print("Data is stored in ChromaDB.")
+        
+        print("=" * 50)
+        print(f"Successfully stored {len(self.embeddings)} documents in ChromaDB")
+        print(f"Collection: {self.APPCFG.collection_name}")
+        print(f"Embedding dimension: {embedding_dimension}")
+        print("=" * 50)
     
     def _load_dataframe(self, file_directory: str):
         """
@@ -254,7 +279,7 @@ def batch_embed_content(texts, model_name, batch_size=100):
             except Exception as e:
                 print(f"Error in batch processing: {str(e)}")
                 # Add a zero vector or skip based on your requirements
-                batch_embeddings.append([0] * 768)  # Adjust dimension as needed
+                batch_embeddings.append([0] * 384)  # Adjust dimension as needed
                 
         all_embeddings.extend(batch_embeddings)
         

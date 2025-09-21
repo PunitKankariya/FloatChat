@@ -80,72 +80,6 @@ export default function ChatScreen() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages, isLoading])
 
-  function addMessage(role, content) {
-    setMessages((prev) => [...prev, { id: Math.random().toString(36).slice(2), role, content }])
-  }
-
-  function respondSmart(text) {
-    const t = text.toLowerCase()
-    if (t.includes("float") || t.includes("nearest") || t.includes("lakshadweep")) {
-      const ranked = floats
-        .map((f) => ({ ...f, distance: haversine(LAK_CENTER, f.coords) }))
-        .sort((a, b) => a.distance - b.distance)
-      const top = ranked.slice(0, 3)
-      const reply =
-        "Here are the nearest floats to Lakshadweep:\n" +
-        top
-          .map(
-            (f, i) => `${i + 1}. ${f.name} — ${f.distance.toFixed(1)} km, latest SST ${f.latestTemp.toFixed(1)}°C`
-          )
-          .join("\n") +
-        "\n\nI have centered the map."
-      setActiveTab("map")
-      setSelectedFloatId(top[0].id)
-      return reply
-    }
-    if (t.includes("graph") || t.includes("temp") || t.includes("trend")) {
-      setActiveTab("graph")
-      return "Switched to the temperature trend graph. Hover to inspect monthly values."
-    }
-    return "I can show nearest floats on the map or switch to the temperature graph. Try: “Nearest floats” or “Show temp graph”."
-  }
-
-  async function handleSend() {
-    const text = input.trim()
-    if (!text || isLoading) return
-    addMessage("user", text)
-    setInput("")
-    setIsLoading(true)
-    await new Promise((r) => setTimeout(r, 500))
-    const reply = respondSmart(text)
-    await new Promise((r) => setTimeout(r, 500))
-    addMessage("bot", reply)
-    setIsLoading(false)
-  }
-
-  function handleKeyDown(e) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault()
-      handleSend()
-    }
-  }
-
-  function quickAsk(text) {
-    if (isLoading) return
-    addMessage("user", text)
-    setInput("")
-    setIsLoading(true)
-    setTimeout(() => {
-      const reply = respondSmart(text)
-      setTimeout(() => {
-        addMessage("bot", reply)
-        setIsLoading(false)
-      }, 400)
-    }, 300)
-  }
-
-  const tempLegendLabel = `Temp at ${selectedFloat?.name}`
-
   // Fetch available chat types on component mount
   useEffect(() => {
     fetchChatTypes();
@@ -169,9 +103,11 @@ export default function ChatScreen() {
     setIsLoading(true);
 
     // Add user message to chat
-    setMessages(prev => [...prev, { type: "user", content: userMessage }]);
+    const userMessageObj = { id: Date.now().toString(), role: "user", content: userMessage };
+    setMessages(prev => [...prev, userMessageObj]);
 
     try {
+      console.log('Sending message to backend:', { message: userMessage, chatType });
       const response = await fetch('http://localhost:8000/api/chat', {
         method: 'POST',
         headers: {
@@ -184,30 +120,115 @@ export default function ChatScreen() {
         })
       });
 
-      const data = await response.json();
-      
-      if (data.success) {
-        setMessages(prev => [...prev, { type: "bot", content: data.response }]);
-      } else {
-        setMessages(prev => [...prev, { type: "bot", content: `Error: ${data.error || 'Something went wrong'}` }]);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server response error:', errorText);
+        throw new Error(`Server error: ${response.status} - ${response.statusText}`);
       }
+
+      // Parse the response as JSON
+      const responseData = await response.json();
+      console.log('API Response:', {
+        hasResponse: !!responseData,
+        responseText: responseData?.response,
+        hasGraphData: !!responseData?.graph_data,
+        graphDataType: typeof responseData?.graph_data,
+        graphDataLength: responseData?.graph_data?.length,
+        graphDataStart: responseData?.graph_data?.substring(0, 50),
+        fullResponse: responseData
+      });
+      
+      // Create an array to hold all bot messages (text and graph)
+      const botMessages = [];
+      
+      // Add text response if available
+      if (responseData.response) {
+        botMessages.push({
+          id: Date.now().toString() + '-text',
+          role: 'bot',
+          content: responseData.response,
+          type: 'text'
+        });
+      }
+      
+      // Add graph if available
+      if (responseData.graph_data) {
+        // Ensure the graph data has the proper data URI prefix
+        let graphData = responseData.graph_data;
+        if (!graphData.startsWith('data:image/')) {
+          graphData = `data:image/png;base64,${graphData}`;
+        }
+        
+        botMessages.push({
+          id: Date.now().toString() + '-graph',
+          role: 'bot',
+          content: graphData,
+          type: 'graph',
+          mimeType: graphData.startsWith('data:') ? 
+                   graphData.split(';')[0].substring(5) : 
+                   'image/png'  // Default MIME type if not specified
+        });
+        
+        console.log('Added graph data to messages:', {
+          hasData: !!graphData,
+          startsWithData: graphData.startsWith('data:image/'),
+          length: graphData.length
+        });
+      }
+      
+      // Add error message if present
+      if (responseData.error) {
+        botMessages.push({
+          id: Date.now().toString() + '-error',
+          role: 'bot',
+          content: `Error: ${responseData.error}`,
+          type: 'error'
+        });
+      }
+      
+      // Add all bot messages to the chat
+      if (botMessages.length > 0) {
+        setMessages(prev => [...prev, ...botMessages]);
+      } else {
+        // Fallback if no valid response was found
+        setMessages(prev => [
+          ...prev, 
+          { 
+            id: Date.now().toString() + '-error',
+            role: "bot", 
+            content: 'No valid response received from the server.',
+            type: 'error'
+          }
+        ]);
+      }
+      
     } catch (error) {
-      setMessages(prev => [...prev, { type: "bot", content: `Connection error: ${error.message}` }]);
+      console.error('Error in sendMessage:', error);
+      setMessages(prev => [
+        ...prev, 
+        { 
+          id: Date.now().toString() + 'e', 
+          role: "bot", 
+          content: `Error: ${error.message}. Please check the console for details.` 
+        }
+      ]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
   };
 
+  const tempLegendLabel = `Temp at ${selectedFloat?.name}`
+
   return (
     <div style={styles.viewport}>
-      {/* Leaflet dark styles (lighter variant to match UI) */}
+      {/* Leaflet dark styles */}
       <style>{`
         .leaflet-container { background: #1F2937; }
         .leaflet-control-zoom a {
@@ -254,7 +275,7 @@ export default function ChatScreen() {
           ←
         </button>
         <h1 style={styles.navTitle}>FloatChat</h1>
-        <div style={{ width: 36 }} /> {/* spacer to balance layout */}
+        <div style={{ width: 36 }} /> {/* spacer */}
       </header>
 
       {/* Main Content */}
@@ -280,34 +301,63 @@ export default function ChatScreen() {
           </div>
 
           <div style={styles.chatScroll} role="log" aria-live="polite" aria-relevant="additions">
-            {messages.map((m) =>
-              m.role === "user" ? (
-                <div key={m.id} style={styles.messageBubbleUser}>
-                  {m.content}
-                </div>
-              ) : (
-                <div key={m.id} style={styles.messageBubbleBot}>
-                  {m.content.split("\n").map((line, i) => (
-                    <div key={i}>{line}</div>
-                  ))}
-                </div>
-              )
-            )}
-            {isLoading && <div style={styles.messageBubbleBot}>Thinking…</div>}
+            {messages.map((m) => {
+              if (m.role === "user") {
+                return (
+                  <div key={m.id} style={styles.messageBubbleUser}>
+                    {m.content}
+                  </div>
+                );
+              }
+              
+              // Bot messages
+              switch (m.type) {
+                case 'graph':
+                  return (
+                    <div key={m.id} style={{...styles.messageBubbleBot, maxWidth: '100%', padding: '10px'}}>
+                      <div style={{ 
+                        maxWidth: '100%', 
+                        overflow: 'auto',
+                        borderRadius: '8px',
+                        border: '1px solid #475569',
+                        margin: '8px 0',
+                        backgroundColor: '#1F2937',
+                        padding: '8px'
+                      }}>
+                        <img 
+                          src={m.content} 
+                          alt="Data visualization" 
+                          style={{
+                            maxWidth: '100%',
+                            height: 'auto',
+                            display: 'block',
+                            margin: '0 auto'
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                  
+                case 'error':
+                  return (
+                    <div key={m.id} style={{...styles.messageBubbleBot, backgroundColor: '#7f1d1d', color: '#fecaca'}}>
+                      {m.content}
+                    </div>
+                  );
+                  
+                case 'text':
+                default:
+                  return (
+                    <div key={m.id} style={styles.messageBubbleBot}>
+                      {m.content ? m.content.split("\n").map((line, i) => (
+                        <div key={i} style={{ margin: '4px 0' }}>{line}</div>
+                      )) : null}
+                    </div>
+                  );
+              }
+            })}
+            {isLoading && <div style={styles.messageBubbleBot}><div style={{fontStyle: 'italic'}}>Thinking…</div></div>}
             <div ref={chatEndRef} />
-          </div>
-
-          {/* Quick suggestions */}
-          <div style={styles.quickRow}>
-            <button style={styles.quickChip} onClick={() => quickAsk("Nearest floats to Lakshadweep")}>
-              Nearest floats
-            </button>
-            <button style={styles.quickChip} onClick={() => quickAsk("Show temp graph")}>
-              Show temp graph
-            </button>
-            <button style={styles.quickChip} onClick={() => quickAsk(`Center on ${selectedFloat?.name}`)}>
-              Center on {selectedFloat?.name}
-            </button>
           </div>
 
           {/* Input Area */}
@@ -317,7 +367,7 @@ export default function ChatScreen() {
               placeholder="Ask me anything..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown} // Changed from onKeyPress to onKeyDown for better compatibility
+              onKeyDown={handleKeyDown}
               aria-label="Message input"
               disabled={isLoading}
             />
@@ -327,7 +377,7 @@ export default function ChatScreen() {
                 opacity: isLoading || !input.trim() ? 0.7 : 1,
                 cursor: isLoading || !input.trim() ? "not-allowed" : "pointer",
               }}
-              onClick={sendMessage} // Changed from handleSend to sendMessage
+              onClick={sendMessage}
               disabled={isLoading || !input.trim()}
               aria-label="Send message"
             >
@@ -393,7 +443,6 @@ export default function ChatScreen() {
             {activeTab === "map" ? (
               <div style={styles.mapWrap}>
                 <MapContainer center={LAK_CENTER} zoom={6} style={styles.mapCanvas}>
-                  {/* Softer dark basemap */}
                   <TileLayer
                     url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
                     attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
@@ -410,12 +459,6 @@ export default function ChatScreen() {
                         <div style={{ minWidth: 160 }}>
                           <div style={{ fontWeight: 600, marginBottom: 4 }}>{f.name}</div>
                           <div>Latest SST: {f.latestTemp.toFixed(1)}°C</div>
-                          <button 
-                            style={styles.popupButton} 
-                            onClick={() => quickAsk(`Show temp graph for ${f.name}`)}
-                          >
-                            Show Trend
-                          </button>
                         </div>
                       </Popup>
                     </Marker>
@@ -472,7 +515,6 @@ export default function ChatScreen() {
 
 // Styles
 const styles = {
-  // Full screen with internal nav
   viewport: {
     display: "flex",
     flexDirection: "column",
@@ -482,8 +524,6 @@ const styles = {
     color: "#FFFFFF",
     overflow: "hidden",
   },
-
-  // Nav
   nav: {
     height: 56,
     flexShrink: 0,
@@ -517,16 +557,12 @@ const styles = {
     flex: 1,
     textAlign: "center",
   },
-
-  // Main split
   main: {
     display: "flex",
     flex: 1,
     width: "100%",
     overflow: "hidden",
   },
-
-  // Chat
   chatContainer: {
     flex: 1,
     display: "flex",
@@ -557,36 +593,21 @@ const styles = {
     lineHeight: 1.45,
   },
   messageBubbleBot: {
-    alignSelf: "flex-start",
-    backgroundColor: "#334155",
-    padding: "12px 16px",
-    borderRadius: "16px",
-    maxWidth: "70%",
-    fontSize: "15px",
-    boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
-    whiteSpace: "pre-wrap",
+    backgroundColor: '#334155',
+    color: '#FFFFFF',
+    padding: '10px 16px',
+    borderRadius: '18px',
+    marginBottom: '8px',
+    alignSelf: 'flex-start',
+    whiteSpace: 'pre-wrap',
+    wordBreak: 'break-word',
     lineHeight: 1.45,
-    border: "1px solid #475569",
+    width: '100%',
+    maxWidth: '90%',
+    fontSize: '15px',
+    boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+    border: '1px solid #475569',
   },
-
-  quickRow: {
-    display: "flex",
-    gap: 8,
-    padding: "8px 12px",
-    borderTop: "1px solid #475569",
-    backgroundColor: "#1F2937",
-    flexWrap: "wrap",
-  },
-  quickChip: {
-    background: "rgba(37, 99, 235, 0.12)",
-    border: "1px solid #2563EB",
-    color: "#FFFFFF",
-    padding: "6px 10px",
-    borderRadius: 999,
-    cursor: "pointer",
-    fontSize: 13,
-  },
-
   inputArea: {
     display: "flex",
     padding: "12px",
@@ -599,139 +620,18 @@ const styles = {
     padding: "10px 12px",
     borderRadius: "8px",
     border: "1px solid #475569",
-    background: "#1F2937",
     color: "#FFFFFF",
-    outline: "none",
     fontSize: "15px",
+    outline: "none",
   },
   sendButton: {
     backgroundColor: "#2563EB",
+    color: "#FFFFFF",
     border: "none",
     borderRadius: "8px",
     padding: "10px 16px",
-    color: "white",
+    fontWeight: 600,
     cursor: "pointer",
-    transition: "background 0.2s ease",
-  },
-
-  // Side panel
-  panelSection: {
-    width: "420px",
-    display: "flex",
-    flexDirection: "column",
-    backgroundColor: "#334155",
-    borderLeft: "1px solid #475569",
-  },
-  tabs: {
-    display: "flex",
-    gap: "8px",
-    padding: "10px",
-    borderBottom: "1px solid #475569",
-    backgroundColor: "#334155",
-  },
-  tab: {
-    flex: 1,
-    border: "1px solid #475569",
-    borderRadius: "8px",
-    padding: "8px 12px",
-    cursor: "pointer",
-    color: "white",
-    fontWeight: 500,
-    transition: "background 0.2s ease, border-color 0.2s ease",
-  },
-
-  floatRow: {
-    display: "flex",
-    gap: 8,
-    padding: "10px",
-    borderBottom: "1px solid #475569",
-    flexWrap: "wrap",
-  },
-  floatChip: {
-    border: "1px solid #475569",
-    color: "#FFFFFF",
-    padding: "6px 10px",
-    borderRadius: 999,
-    cursor: "pointer",
-    fontSize: 13,
-    background: "transparent",
-  },
-
-  panel: {
-    flex: 1,
-    padding: "12px",
-    width: "100%",
-    overflow: "hidden",
-    display: "flex",
-    flexDirection: "column",
-    gap: 12,
-  },
-
-  mapWrap: {
-    flex: 1,
-    minHeight: 280,
-    borderRadius: 12,
-    overflow: "hidden",
-    border: "1px solid #475569",
-    background: "#1F2937",
-  },
-  mapCanvas: { width: "100%", height: "100%" },
-
-  popupButton: {
-    background: "#2563EB",
-    color: "#FFFFFF",
-    border: "none",
-    borderRadius: 6,
-    padding: "6px 8px",
-    cursor: "pointer",
-  },
-
-  graphWrap: {
-    display: "flex",
-    flexDirection: "column",
-    flex: 1,
-    minHeight: 280,
-    borderRadius: 12,
-    overflow: "hidden",
-    border: "1px solid #475569",
-    background: "#1F2937",
-  },
-  graphHeader: {
-    padding: "12px 12px 0 12px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 12,
-  },
-  graphTitle: { fontWeight: 600 },
-  graphMeta: { color: "#FFFFFF" },
-  chatTypeSelector: {
-    padding: "12px",
-    borderBottom: "1px solid #374151",
-    backgroundColor: "#1F2937",
-    display: "flex",
-    alignItems: "center",
-    gap: "12px"
-  },
-  chatTypeLabel: {
-    fontSize: "14px",
-    fontWeight: "500",
-    color: "#9CA3AF"
-  },
-  chatTypeSelect: {
-    flex: 1,
-    padding: "6px 10px",
-    borderRadius: "6px",
-    border: "1px solid #374151",
-    backgroundColor: "#111827",
-    color: "white",
-    fontSize: "14px",
-    outline: "none"
-  },
-  loadingDots: {
-    display: "flex",
-    alignItems: "center",
-    gap: "4px",
-    color: "#9CA3AF"
+    fontSize: "14px"
   }
-}
+};

@@ -1,0 +1,189 @@
+Requirement already satisfied: chromadb in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (1.0.20)
+Requirement already satisfied: langchain in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (0.3.27)
+Requirement already satisfied: langchain-community in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (0.3.29)
+Requirement already satisfied: langchain-core in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (0.3.76)
+Requirement already satisfied: google-generativeai in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (0.8.5)
+Collecting langchain-google-genai
+  Downloading langchain_google_genai-2.1.10-py3-none-any.whl (49 kB)
+     -------------------------------------- 49.4/49.4 kB 495.8 kB/s eta 0:00:00
+Collecting sentence-transformers
+  Downloading sentence_transformers-5.1.0-py3-none-any.whl (483 kB)
+     -------------------------------------- 483.4/483.4 kB 2.2 MB/s eta 0:00:00
+Requirement already satisfied: python-dotenv in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (1.1.1)
+Requirement already satisfied: pandas in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (2.3.2)
+Requirement already satisfied: numpy in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (2.3.3)
+Requirement already satisfied: tqdm in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (4.67.1)
+Collecting python-multipart
+  Using cached python_multipart-0.0.20-py3-none-any.whl (24 kB)
+Requirement already satisfied: build>=1.0.3 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from chromadb) (1.3.0)
+Requirement already satisfied: pydantic>=1.9 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from chromadb) (2.11.7)
+Requirement already satisfied: pybase64>=1.4.1 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from chromadb) (1.4.2)
+Requirement already satisfied: uvicorn[standard]>=0.18.3 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from chromadb) (0.35.0)
+Requirement already satisfied: posthog<6.0.0,>=2.4.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from chromadb) (5.4.0)
+Requirement already satisfied: typing-extensions>=4.5.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from chromadb) (4.15.0)
+Requirement already satisfied: onnxruntime>=1.14.1 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from chromadb) (1.22.1)
+Requirement already satisfied: opentelemetry-api>=1.2.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from chromadb) (1.37.0)
+Requirement already satisfied: opentelemetry-exporter-otlp-proto-grpc>=1.2.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from chromadb) (1.37.0)
+Requirement already satisfied: opentelemetry-sdk>=1.2.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from chromadb) (1.37.0)
+Requirement already satisfied: tokenizers>=0.13.2 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from chromadb) (0.22.0)
+Requirement already satisfied: pypika>=0.48.9 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from chromadb) (0.48.9)
+Requirement already satisfied: overrides>=7.3.1 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from chromadb) (7.7.0)
+Requirement already satisfied: importlib-resources in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from chromadb) (6.5.2)
+Requirement already satisfied: grpcio>=1.58.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from chromadb) (1.74.0)
+Requirement already satisfied: bcrypt>=4.0.1 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from chromadb) (4.3.0)
+Requirement already satisfied: typer>=0.9.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from chromadb) (0.17.4)
+Requirement already satisfied: kubernetes>=28.1.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from chromadb) (33.1.0)
+Requirement already satisfied: tenacity>=8.2.3 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from chromadb) (9.1.2)
+Requirement already satisfied: pyyaml>=6.0.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from chromadb) (6.0.2)
+Requirement already satisfied: mmh3>=4.0.1 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from chromadb) (5.2.0)
+Requirement already satisfied: orjson>=3.9.12 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from chromadb) (3.11.3)
+Requirement already satisfied: httpx>=0.27.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from chromadb) (0.28.1)
+Requirement already satisfied: rich>=10.11.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from chromadb) (14.1.0)
+Requirement already satisfied: jsonschema>=4.19.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from chromadb) (4.25.1)
+Requirement already satisfied: langchain-text-splitters<1.0.0,>=0.3.9 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from langchain) (0.3.11)
+Requirement already satisfied: langsmith>=0.1.17 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from langchain) (0.4.27)
+Requirement already satisfied: SQLAlchemy<3,>=1.4 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from langchain) (2.0.43)
+Requirement already satisfied: requests<3,>=2 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from langchain) (2.32.5)
+Requirement already satisfied: aiohttp<4.0.0,>=3.8.3 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from langchain-community) (3.12.15)
+Requirement already satisfied: dataclasses-json<0.7,>=0.6.7 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from langchain-community) (0.6.7)
+Requirement already satisfied: pydantic-settings<3.0.0,>=2.10.1 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from langchain-community) (2.10.1)
+Requirement already satisfied: httpx-sse<1.0.0,>=0.4.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from langchain-community) (0.4.1)
+Requirement already satisfied: jsonpatch<2.0,>=1.33 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from langchain-core) (1.33)
+Requirement already satisfied: packaging>=23.2 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from langchain-core) (25.0)
+Requirement already satisfied: google-ai-generativelanguage==0.6.15 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from google-generativeai) (0.6.15)
+Requirement already satisfied: google-api-core in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from google-generativeai) (2.25.1)
+Requirement already satisfied: google-api-python-client in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from google-generativeai) (2.181.0)
+Requirement already satisfied: google-auth>=2.15.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from google-generativeai) (2.40.3)
+Requirement already satisfied: protobuf in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from google-generativeai) (5.29.5)
+Requirement already satisfied: proto-plus<2.0.0dev,>=1.22.3 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from google-ai-generativelanguage==0.6.15->google-generativeai) (1.26.1)
+Collecting filetype<2.0.0,>=1.2.0
+  Using cached filetype-1.2.0-py2.py3-none-any.whl (19 kB)
+Collecting langchain-google-genai
+  Downloading langchain_google_genai-2.1.9-py3-none-any.whl (49 kB)
+     ---------------------------------------- 49.4/49.4 kB ? eta 0:00:00
+  Using cached langchain_google_genai-2.1.8-py3-none-any.whl (47 kB)
+  Downloading langchain_google_genai-2.1.7-py3-none-any.whl (47 kB)
+     ---------------------------------------- 47.4/47.4 kB ? eta 0:00:00
+  Downloading langchain_google_genai-2.1.6-py3-none-any.whl (47 kB)
+     ---------------------------------------- 47.4/47.4 kB ? eta 0:00:00
+  Downloading langchain_google_genai-2.1.5-py3-none-any.whl (44 kB)
+     ---------------------------------------- 44.8/44.8 kB ? eta 0:00:00
+  Downloading langchain_google_genai-2.1.4-py3-none-any.whl (44 kB)
+     ---------------------------------------- 44.3/44.3 kB 2.3 MB/s eta 0:00:00
+  Downloading langchain_google_genai-2.1.3-py3-none-any.whl (43 kB)
+     ---------------------------------------- 43.7/43.7 kB ? eta 0:00:00
+  Downloading langchain_google_genai-2.1.2-py3-none-any.whl (42 kB)
+     ---------------------------------------- 42.0/42.0 kB ? eta 0:00:00
+  Downloading langchain_google_genai-2.1.1-py3-none-any.whl (40 kB)
+     ---------------------------------------- 40.8/40.8 kB ? eta 0:00:00
+  Downloading langchain_google_genai-2.1.0-py3-none-any.whl (40 kB)
+     ---------------------------------------- 40.2/40.2 kB ? eta 0:00:00
+  Downloading langchain_google_genai-2.0.11-py3-none-any.whl (39 kB)
+  Downloading langchain_google_genai-2.0.10-py3-none-any.whl (41 kB)
+     ---------------------------------------- 42.0/42.0 kB ? eta 0:00:00
+Collecting transformers<5.0.0,>=4.41.0
+  Downloading transformers-4.56.1-py3-none-any.whl (11.6 MB)
+     --------------------------------------- 11.6/11.6 MB 12.3 MB/s eta 0:00:00
+Collecting torch>=1.11.0
+  Downloading torch-2.8.0-cp311-cp311-win_amd64.whl (241.4 MB)
+     ------------------------------------- 241.4/241.4 MB 10.7 MB/s eta 0:00:00
+Collecting scikit-learn
+  Downloading scikit_learn-1.7.2-cp311-cp311-win_amd64.whl (8.9 MB)
+     ---------------------------------------- 8.9/8.9 MB 25.9 MB/s eta 0:00:00
+Collecting scipy
+  Downloading scipy-1.16.2-cp311-cp311-win_amd64.whl (38.7 MB)
+     --------------------------------------- 38.7/38.7 MB 15.2 MB/s eta 0:00:00
+Requirement already satisfied: huggingface-hub>=0.20.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from sentence-transformers) (0.34.4)
+Requirement already satisfied: Pillow in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from sentence-transformers) (11.3.0)
+Requirement already satisfied: python-dateutil>=2.8.2 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from pandas) (2.9.0.post0)
+Requirement already satisfied: pytz>=2020.1 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from pandas) (2025.2)
+Requirement already satisfied: tzdata>=2022.7 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from pandas) (2025.2)
+Requirement already satisfied: colorama in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from tqdm) (0.4.6)
+Requirement already satisfied: aiohappyeyeballs>=2.5.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from aiohttp<4.0.0,>=3.8.3->langchain-community) (2.6.1)
+Requirement already satisfied: aiosignal>=1.4.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from aiohttp<4.0.0,>=3.8.3->langchain-community) (1.4.0)
+Requirement already satisfied: attrs>=17.3.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from aiohttp<4.0.0,>=3.8.3->langchain-community) (25.3.0)
+Requirement already satisfied: frozenlist>=1.1.1 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from aiohttp<4.0.0,>=3.8.3->langchain-community) (1.7.0)
+Requirement already satisfied: multidict<7.0,>=4.5 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from aiohttp<4.0.0,>=3.8.3->langchain-community) (6.6.4)
+Requirement already satisfied: propcache>=0.2.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from aiohttp<4.0.0,>=3.8.3->langchain-community) (0.3.2)
+Requirement already satisfied: yarl<2.0,>=1.17.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from aiohttp<4.0.0,>=3.8.3->langchain-community) (1.20.1)
+Requirement already satisfied: pyproject_hooks in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from build>=1.0.3->chromadb) (1.2.0)
+Requirement already satisfied: marshmallow<4.0.0,>=3.18.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from dataclasses-json<0.7,>=0.6.7->langchain-community) (3.26.1)
+Requirement already satisfied: typing-inspect<1,>=0.4.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from dataclasses-json<0.7,>=0.6.7->langchain-community) (0.9.0)
+Requirement already satisfied: cachetools<6.0,>=2.0.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from google-auth>=2.15.0->google-generativeai) (5.5.2)
+Requirement already satisfied: pyasn1-modules>=0.2.1 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from google-auth>=2.15.0->google-generativeai) (0.4.2)
+Requirement already satisfied: rsa<5,>=3.1.4 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from google-auth>=2.15.0->google-generativeai) (4.9.1)
+Requirement already satisfied: anyio in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from httpx>=0.27.0->chromadb) (4.10.0)
+Requirement already satisfied: certifi in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from httpx>=0.27.0->chromadb) (2025.8.3)
+Requirement already satisfied: httpcore==1.* in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from httpx>=0.27.0->chromadb) (1.0.9)
+Requirement already satisfied: idna in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from httpx>=0.27.0->chromadb) (3.10)
+Requirement already satisfied: h11>=0.16 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from httpcore==1.*->httpx>=0.27.0->chromadb) (0.16.0)
+Requirement already satisfied: filelock in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from huggingface-hub>=0.20.0->sentence-transformers) (3.19.1)
+Requirement already satisfied: fsspec>=2023.5.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from huggingface-hub>=0.20.0->sentence-transformers) (2025.9.0)
+Requirement already satisfied: jsonpointer>=1.9 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from jsonpatch<2.0,>=1.33->langchain-core) (3.0.0)
+Requirement already satisfied: jsonschema-specifications>=2023.03.6 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from jsonschema>=4.19.0->chromadb) (2025.9.1)
+Requirement already satisfied: referencing>=0.28.4 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from jsonschema>=4.19.0->chromadb) (0.36.2)
+Requirement already satisfied: rpds-py>=0.7.1 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from jsonschema>=4.19.0->chromadb) (0.27.1)
+Requirement already satisfied: six>=1.9.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from kubernetes>=28.1.0->chromadb) (1.17.0)
+Requirement already satisfied: websocket-client!=0.40.0,!=0.41.*,!=0.42.*,>=0.32.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from kubernetes>=28.1.0->chromadb) (1.8.0)
+Requirement already satisfied: requests-oauthlib in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from kubernetes>=28.1.0->chromadb) (2.0.0)
+Requirement already satisfied: oauthlib>=3.2.2 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from kubernetes>=28.1.0->chromadb) (3.3.1)
+Requirement already satisfied: urllib3>=1.24.2 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from kubernetes>=28.1.0->chromadb) (2.5.0)
+Requirement already satisfied: durationpy>=0.7 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from kubernetes>=28.1.0->chromadb) (0.10)
+Requirement already satisfied: requests-toolbelt>=1.0.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from langsmith>=0.1.17->langchain) (1.0.0)
+Requirement already satisfied: zstandard>=0.23.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from langsmith>=0.1.17->langchain) (0.24.0)
+Requirement already satisfied: coloredlogs in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from onnxruntime>=1.14.1->chromadb) (15.0.1)
+Requirement already satisfied: flatbuffers in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from onnxruntime>=1.14.1->chromadb) (25.2.10)
+Requirement already satisfied: sympy in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from onnxruntime>=1.14.1->chromadb) (1.14.0)
+Requirement already satisfied: importlib-metadata<8.8.0,>=6.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from opentelemetry-api>=1.2.0->chromadb) (8.7.0)
+Requirement already satisfied: googleapis-common-protos~=1.57 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from opentelemetry-exporter-otlp-proto-grpc>=1.2.0->chromadb) (1.70.0)
+Requirement already satisfied: opentelemetry-exporter-otlp-proto-common==1.37.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from opentelemetry-exporter-otlp-proto-grpc>=1.2.0->chromadb) (1.37.0)
+Requirement already satisfied: opentelemetry-proto==1.37.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from opentelemetry-exporter-otlp-proto-grpc>=1.2.0->chromadb) (1.37.0)
+Requirement already satisfied: opentelemetry-semantic-conventions==0.58b0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from opentelemetry-sdk>=1.2.0->chromadb) (0.58b0)
+Requirement already satisfied: backoff>=1.10.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from posthog<6.0.0,>=2.4.0->chromadb) (2.2.1)
+Requirement already satisfied: distro>=1.5.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from posthog<6.0.0,>=2.4.0->chromadb) (1.9.0)
+Requirement already satisfied: annotated-types>=0.6.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from pydantic>=1.9->chromadb) (0.7.0)
+Requirement already satisfied: pydantic-core==2.33.2 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from pydantic>=1.9->chromadb) (2.33.2)
+Requirement already satisfied: typing-inspection>=0.4.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from pydantic>=1.9->chromadb) (0.4.1)
+Requirement already satisfied: charset_normalizer<4,>=2 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from requests<3,>=2->langchain) (3.4.3)
+Requirement already satisfied: markdown-it-py>=2.2.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from rich>=10.11.0->chromadb) (4.0.0)
+Requirement already satisfied: pygments<3.0.0,>=2.13.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from rich>=10.11.0->chromadb) (2.19.2)
+Requirement already satisfied: greenlet>=1 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from SQLAlchemy<3,>=1.4->langchain) (3.2.4)
+Collecting networkx
+  Downloading networkx-3.5-py3-none-any.whl (2.0 MB)
+     ---------------------------------------- 2.0/2.0 MB 16.2 MB/s eta 0:00:00
+Collecting jinja2
+  Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
+     ---------------------------------------- 134.9/134.9 kB ? eta 0:00:00
+Collecting regex!=2019.12.17
+  Downloading regex-2025.9.1-cp311-cp311-win_amd64.whl (276 kB)
+     ------------------------------------- 276.2/276.2 kB 17.7 MB/s eta 0:00:00
+Collecting safetensors>=0.4.3
+  Downloading safetensors-0.6.2-cp38-abi3-win_amd64.whl (320 kB)
+     ------------------------------------- 320.2/320.2 kB 20.7 MB/s eta 0:00:00
+Requirement already satisfied: click>=8.0.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from typer>=0.9.0->chromadb) (8.2.1)
+Requirement already satisfied: shellingham>=1.3.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from typer>=0.9.0->chromadb) (1.5.4)
+Requirement already satisfied: httptools>=0.6.3 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from uvicorn[standard]>=0.18.3->chromadb) (0.6.4)
+Requirement already satisfied: watchfiles>=0.13 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from uvicorn[standard]>=0.18.3->chromadb) (1.1.0)
+Requirement already satisfied: websockets>=10.4 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from uvicorn[standard]>=0.18.3->chromadb) (15.0.1)
+Requirement already satisfied: httplib2<1.0.0,>=0.19.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from google-api-python-client->google-generativeai) (0.31.0)
+Requirement already satisfied: google-auth-httplib2<1.0.0,>=0.2.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from google-api-python-client->google-generativeai) (0.2.0)
+Requirement already satisfied: uritemplate<5,>=3.0.1 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from google-api-python-client->google-generativeai) (4.2.0)
+Collecting joblib>=1.2.0
+  Downloading joblib-1.5.2-py3-none-any.whl (308 kB)
+     ------------------------------------- 308.4/308.4 kB 18.6 MB/s eta 0:00:00
+Collecting threadpoolctl>=3.1.0
+  Downloading threadpoolctl-3.6.0-py3-none-any.whl (18 kB)
+Requirement already satisfied: grpcio-status<2.0.0,>=1.33.2 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from google-api-core->google-generativeai) (1.71.2)
+Requirement already satisfied: pyparsing<4,>=3.0.4 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from httplib2<1.0.0,>=0.19.0->google-api-python-client->google-generativeai) (3.2.3)
+Requirement already satisfied: zipp>=3.20 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from importlib-metadata<8.8.0,>=6.0->opentelemetry-api>=1.2.0->chromadb) (3.23.0)
+Requirement already satisfied: mdurl~=0.1 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from markdown-it-py>=2.2.0->rich>=10.11.0->chromadb) (0.1.2)
+Requirement already satisfied: pyasn1<0.7.0,>=0.6.1 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from pyasn1-modules>=0.2.1->google-auth>=2.15.0->google-generativeai) (0.6.1)
+Requirement already satisfied: mpmath<1.4,>=1.1.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from sympy->onnxruntime>=1.14.1->chromadb) (1.3.0)
+Requirement already satisfied: mypy-extensions>=0.3.0 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from typing-inspect<1,>=0.4.0->dataclasses-json<0.7,>=0.6.7->langchain-community) (1.1.0)
+Requirement already satisfied: sniffio>=1.1 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from anyio->httpx>=0.27.0->chromadb) (1.3.1)
+Requirement already satisfied: humanfriendly>=9.1 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from coloredlogs->onnxruntime>=1.14.1->chromadb) (10.0)
+Collecting MarkupSafe>=2.0
+  Downloading MarkupSafe-3.0.2-cp311-cp311-win_amd64.whl (15 kB)
+Requirement already satisfied: pyreadline3 in c:\just be there\hackathon\floatchat\.venv\lib\site-packages (from humanfriendly>=9.1->coloredlogs->onnxruntime>=1.14.1->chromadb) (3.5.4)
+Installing collected packages: filetype, threadpoolctl, scipy, safetensors, regex, python-multipart, networkx, MarkupSafe, joblib, scikit-learn, jinja2, torch, transformers, sentence-transformers, langchain-google-genai
+Successfully installed MarkupSafe-3.0.2 filetype-1.2.0 jinja2-3.1.6 joblib-1.5.2 langchain-google-genai-2.0.10 networkx-3.5 python-multipart-0.0.20 regex-2025.9.1 safetensors-0.6.2 scikit-learn-1.7.2 scipy-1.16.2 sentence-transformers-5.1.0 threadpoolctl-3.6.0 torch-2.8.0 transformers-4.56.1

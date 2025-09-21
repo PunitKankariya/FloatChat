@@ -8,12 +8,18 @@ pyprojroot
 python-dotenv
 PyYAML
 SQLAlchemy
+matplotlib
+google-generativeai
+langchain-google-genai
+seaborn
+# Vector DB and embeddings
+chromadb
+sentence-transformers
 #openai
 
 #langchain dependencies
 #pip install google-cloud-aiplatform
 # Optional: For local vector DB
-#pip install chromadb
 #pip install onnxruntime
 #pip install google-generativeai
 #pip install langchain-community
