@@ -17,7 +17,7 @@ L.Icon.Default.mergeOptions({
 // Neutrals: #1F2937 (bg), #334155 (panel), #475569 (borders)
 // White: #FFFFFF
 
-const LAK_CENTER = [10.57, 72.64]
+const LAK_CENTER = [20.5937, 78.9629]; // Center of India
 const baseMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
 const baseTemp = [22, 23, 27, 30, 32, 29]
 
@@ -27,6 +27,14 @@ function makeTempData(offset = 0) {
     temp: Math.round((baseTemp[i] + offset) * 10) / 10,
   }))
 }
+
+// Tsunami risk locations with their coordinates and risk levels
+const tsunamiRiskLocations = [
+  { name: "Kochi Coast", coords: [9.9312, 76.2673], risk: "high" },
+  { name: "Visakhapatnam Coast", coords: [17.6868, 83.2185], risk: "high" },
+  { name: "Goa Coast", coords: [15.2993, 74.1240], risk: "high" },
+  { name: "Haldia Coast", coords: [22.0257, 88.0583], risk: "high" },
+];
 
 const floats = [
   { id: 1, name: "LD-01", coords: [10.57, 72.64], latestTemp: 29.1, offset: 0.2 },
@@ -59,7 +67,7 @@ function Recenter({ lat, lng, zoom = 6 }) {
 }
 
 export default function ChatScreen() {
-  const [activeTab, setActiveTab] = useState("map")
+  const [showMap, setShowMap] = useState(false)
   const [messages, setMessages] = useState([
     { id: "b1", role: "bot", content: "Hello! I'm your FloatChat assistant. Ask me about ocean data, SQL databases, or CSV/XLSX files!" }
   ])
@@ -226,11 +234,22 @@ export default function ChatScreen() {
 
   const tempLegendLabel = `Temp at ${selectedFloat?.name}`
 
+  // Create a red icon for high-risk tsunami areas
+  const redIcon = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+  });
+
   return (
     <div style={styles.viewport}>
       {/* Leaflet dark styles */}
       <style>{`
         .leaflet-container { background: #1F2937; }
+        .leaflet-popup-content { color: #1F2937; }
         .leaflet-control-zoom a {
           background: #334155;
           color: #FFFFFF;
@@ -388,125 +407,84 @@ export default function ChatScreen() {
 
         {/* Side Panel */}
         <aside style={styles.panelSection} aria-label="Side panel">
-          {/* Tabs */}
-          <div style={styles.tabs} role="tablist" aria-label="View switcher">
-            <button
-              role="tab"
-              aria-selected={activeTab === "map"}
-              onClick={() => setActiveTab("map")}
-              style={{
-                ...styles.tab,
-                backgroundColor: activeTab === "map" ? "#2563EB" : "transparent",
-              }}
+          <div style={styles.sectionHeader}>
+            <button 
+              onClick={() => setShowMap(!showMap)}
+              style={styles.mapToggleButton}
             >
-              Map
-            </button>
-            <button
-              role="tab"
-              aria-selected={activeTab === "graph"}
-              onClick={() => setActiveTab("graph")}
-              style={{
-                ...styles.tab,
-                backgroundColor: activeTab === "graph" ? "#2563EB" : "transparent",
-              }}
-            >
-              Graph
+              {showMap ? 'Hide Map' : 'Show Map'}
             </button>
           </div>
 
-          {/* Float selector */}
-          <div style={styles.floatRow} aria-label="Float selector">
-            {floats.map((f) => {
-              const active = f.id === selectedFloatId
-              return (
-                <button
-                  key={f.id}
-                  style={{
-                    ...styles.floatChip,
-                    backgroundColor: active ? "rgba(37, 99, 235, 0.15)" : "transparent",
-                    borderColor: active ? "#2563EB" : "#475569",
+          {/* Map View */}
+          {showMap && (
+            <div style={{
+              flex: 1,
+              position: 'relative',
+              backgroundColor: '#1F2937',
+              borderTop: '1px solid #475569',
+              minHeight: '400px',
+              height: '100%',
+              width: '100%'
+            }}>
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column'
+              }}>
+                <MapContainer 
+                  center={LAK_CENTER} 
+                  zoom={6} 
+                  style={{ 
+                    flex: 1,
+                    width: '100%',
+                    minHeight: '400px'
                   }}
-                  onClick={() => {
-                    setSelectedFloatId(f.id)
-                    if (activeTab !== "map") setActiveTab("graph")
+                  whenCreated={mapInstance => {
+                    // Force update the map size when it becomes visible
+                    setTimeout(() => {
+                      mapInstance.invalidateSize();
+                    }, 100);
                   }}
-                  aria-pressed={active}
                 >
-                  {f.name}
-                </button>
-              )
-            })}
-          </div>
-
-          {/* Content */}
-          <div style={styles.panel}>
-            {activeTab === "map" ? (
-              <div style={styles.mapWrap}>
-                <MapContainer center={LAK_CENTER} zoom={6} style={styles.mapCanvas}>
                   <TileLayer
                     url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
                     attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
                   />
-                  {floats.map((f) => (
+                  {/* Tsunami Risk Markers */}
+                  {tsunamiRiskLocations.map((location, index) => (
                     <Marker 
-                      key={f.id} 
-                      position={f.coords}
-                      eventHandlers={{
-                        click: () => setSelectedFloatId(f.id)
-                      }}
+                      key={`tsunami-${index}`}
+                      position={location.coords}
+                      icon={redIcon}
                     >
                       <Popup>
                         <div style={{ minWidth: 160 }}>
-                          <div style={{ fontWeight: 600, marginBottom: 4 }}>{f.name}</div>
-                          <div>Latest SST: {f.latestTemp.toFixed(1)}°C</div>
+                          <div style={{ 
+                            fontWeight: 600, 
+                            marginBottom: 4,
+                            color: '#dc2626'
+                          }}>
+                            {location.name}
+                          </div>
+                          <div>Tsunami Risk: <strong style={{ color: '#dc2626' }}>High</strong></div>
                         </div>
                       </Popup>
                     </Marker>
                   ))}
                   <Recenter 
-                    lat={selectedFloat?.coords[0]} 
-                    lng={selectedFloat?.coords[1]} 
+                    lat={LAK_CENTER[0]} 
+                    lng={LAK_CENTER[1]} 
                   />
                 </MapContainer>
               </div>
-            ) : (
-              <div style={styles.graphWrap}>
-                <div style={styles.graphHeader}>
-                  <div style={styles.graphTitle}>Temperature Trend — {selectedFloat?.name}</div>
-                  <div style={styles.graphMeta}>
-                    Latest: <b>{selectedFloat?.latestTemp.toFixed(1)}°C</b>
-                  </div>
-                </div>
-                <div style={{ flex: 1, minHeight: 240 }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={floatTempData} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}>
-                      <CartesianGrid stroke="#475569" strokeDasharray="5 5" />
-                      <XAxis dataKey="month" stroke="rgba(255,255,255,0.85)" />
-                      <YAxis stroke="rgba(255,255,255,0.85)" />
-                      <Tooltip
-                        contentStyle={{
-                          background: "#334155",
-                          border: "1px solid #475569",
-                          borderRadius: 8,
-                          color: "#FFFFFF",
-                        }}
-                      />
-                      <Legend wrapperStyle={{ color: "#FFFFFF", paddingTop: 8 }} iconType="circle" />
-                      <Line
-                        type="monotone"
-                        dataKey="temp"
-                        name={tempLegendLabel}
-                        stroke="#2563EB"
-                        strokeWidth={3}
-                        dot={{ r: 4, stroke: "#2563EB", fill: "#FFFFFF" }}
-                        activeDot={{ r: 6 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </aside>
       </div>
     </div>
@@ -560,60 +538,88 @@ const styles = {
   main: {
     display: "flex",
     flex: 1,
-    width: "100%",
-    overflow: "hidden",
+    height: 'calc(100vh - 56px)', // Subtract header height
+    overflow: 'hidden',
+    position: 'relative',
+    backgroundColor: '#1F2937',
   },
   chatContainer: {
+    display: 'flex',
+    flexDirection: 'column',
     flex: 1,
-    display: "flex",
-    flexDirection: "column",
-    borderRight: "1px solid #475569",
-    overflow: "hidden",
-    minWidth: 0,
-    backgroundColor: "#1F2937",
+    height: '100%',
+    position: 'relative',
+    overflow: 'hidden',
+    backgroundColor: '#1F2937',
   },
-  chatScroll: {
+  messagesContainer: {
     flex: 1,
-    overflowY: "auto",
-    padding: "20px 24px",
+    overflowY: 'auto',
+    padding: '16px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px',
+    paddingBottom: '80px', // Space for input area
+  },
+  panel: {
+    flex: 1,
     display: "flex",
     flexDirection: "column",
-    gap: "12px",
     minHeight: 0,
+    backgroundColor: "#1F2937",
+    overflow: "hidden",
+    position: 'relative',
+    height: '100%',
+    width: '100%'
   },
-  messageBubbleUser: {
-    alignSelf: "flex-end",
-    backgroundColor: "#2563EB",
-    padding: "12px 16px",
-    borderRadius: "16px",
-    maxWidth: "70%",
-    fontSize: "15px",
-    boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
-    whiteSpace: "pre-wrap",
-    lineHeight: 1.45,
+  panelSection: {
+    backgroundColor: "#1F2937",
+    borderLeft: "1px solid #475569",
+    width: "40%",
+    minWidth: "400px",
+    display: "flex",
+    flexDirection: "column",
+    overflow: "hidden",
+    position: 'relative',
+    height: '100%',
+    chatContainer: {
+      display: 'flex',
+      flexDirection: 'column',
+      flex: 1,
+      height: '100%',
+      position: 'relative',
+      overflow: 'hidden',
+      height: '100%'
+    }
   },
   messageBubbleBot: {
     backgroundColor: '#334155',
     color: '#FFFFFF',
-    padding: '10px 16px',
+    padding: '12px 16px',
     borderRadius: '18px',
-    marginBottom: '8px',
+    marginBottom: '12px',
     alignSelf: 'flex-start',
     whiteSpace: 'pre-wrap',
     wordBreak: 'break-word',
-    lineHeight: 1.45,
-    width: '100%',
-    maxWidth: '90%',
+    lineHeight: 1.5,
+    maxWidth: '85%',
     fontSize: '15px',
     boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
     border: '1px solid #475569',
   },
   inputArea: {
     display: "flex",
-    padding: "12px",
-    borderTop: "1px solid #475569",
-    backgroundColor: "#334155",
-    gap: 8,
+    position: 'fixed',
+    bottom: 0,
+    left: 0,
+    right: '40%', // Account for side panel
+    backgroundColor: '#1F2937',
+    padding: '12px 16px',
+    borderTop: '1px solid #475569',
+    zIndex: 10,
+    gap: '8px',
+    boxSizing: 'border-box',
+    height: '80px',
   },
   input: {
     flex: 1,
@@ -633,5 +639,28 @@ const styles = {
     fontWeight: 600,
     cursor: "pointer",
     fontSize: "14px"
+  },
+  sectionHeader: {
+    padding: '12px 16px',
+    backgroundColor: "#1F2937",
+    borderBottom: '1px solid #475569',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexShrink: 0,
+  },
+  mapToggleButton: {
+    backgroundColor: '#2563EB',
+    color: 'white',
+    border: 'none',
+    padding: '8px 16px',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: 500,
+    transition: 'all 0.2s ease',
+    ':hover': {
+      backgroundColor: '#1D4ED8'
+    }
   }
 };
