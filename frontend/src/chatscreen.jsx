@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react"
 import L from "leaflet"
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet"
-import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts"
+import { LineChart, Line, Area, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Label } from "recharts"
 import "leaflet/dist/leaflet.css"
 
 // Fix Leaflet marker icons in bundlers
@@ -30,10 +30,50 @@ function makeTempData(offset = 0) {
 
 // Tsunami risk locations with their coordinates and risk levels
 const tsunamiRiskLocations = [
-  { name: "Kochi Coast", coords: [9.9312, 76.2673], risk: "high" },
-  { name: "Visakhapatnam Coast", coords: [17.6868, 83.2185], risk: "high" },
-  { name: "Goa Coast", coords: [15.2993, 74.1240], risk: "high" },
-  { name: "Haldia Coast", coords: [22.0257, 88.0583], risk: "high" },
+  { 
+    name: "Kochi Coast", 
+    coords: [9.9312, 76.2673], 
+    risk: "high",
+    radius: 50000,
+    population: "2.1 million",
+    lastTsunami: "2004",
+    color: '#FF6B6B',
+    gradient: ['#FF6B6B', '#FF8E8E', '#FFD6D6'],
+    features: ['Major port', 'High population density', 'Tourist hotspot']
+  },
+  { 
+    name: "Visakhapatnam Coast", 
+    coords: [17.6868, 83.2185], 
+    risk: "high",
+    radius: 60000,
+    population: "2.3 million",
+    lastTsunami: "2004",
+    color: '#4ECDC4',
+    gradient: ['#4ECDC4', '#88D8D0', '#C6F6F1'],
+    features: ['Naval base', 'Industrial area', 'Major city']
+  },
+  { 
+    name: "Goa Coast", 
+    coords: [15.2993, 74.1240], 
+    risk: "high",
+    radius: 40000,
+    population: "1.5 million",
+    lastTsunami: "2004",
+    color: '#FFD166',
+    gradient: ['#FFD166', '#FFDF8C', '#FFEDB3'],
+    features: ['Tourist destination', 'Beach resorts', 'Low-lying areas']
+  },
+  { 
+    name: "Haldia Coast", 
+    coords: [22.0257, 88.0583], 
+    risk: "high",
+    radius: 45000,
+    population: "1.1 million",
+    lastTsunami: "2004",
+    color: '#A78BFA',
+    gradient: ['#A78BFA', '#C4B5FD', '#DDD6FE'],
+    features: ['Major port', 'Industrial area', 'River delta']
+  },
 ];
 
 const floats = [
@@ -68,6 +108,7 @@ function Recenter({ lat, lng, zoom = 6 }) {
 
 export default function ChatScreen() {
   const [showMap, setShowMap] = useState(false)
+  const mapRef = useRef(null)
   const [messages, setMessages] = useState([
     { id: "b1", role: "bot", content: "Hello! I'm your FloatChat assistant. Ask me about ocean data, SQL databases, or CSV/XLSX files!" }
   ])
@@ -234,22 +275,185 @@ export default function ChatScreen() {
 
   const tempLegendLabel = `Temp at ${selectedFloat?.name}`
 
-  // Create a red icon for high-risk tsunami areas
-  const redIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
-  });
+  // Create a simple red spot for alert areas
+  const createMarkerIcon = () => {
+    return L.divIcon({
+      className: 'alert-marker',
+      html: `
+        <div style="
+          width: 14px;
+          height: 14px;
+          background: #ff0000;
+          border-radius: 50%;
+          border: 2px solid white;
+          box-shadow: 0 0 0 2px rgba(255,0,0,0.5);
+        "></div>
+      `,
+      iconSize: [14, 14],
+      iconAnchor: [7, 7],
+      popupAnchor: [0, -7]
+    });
+  };
 
   return (
     <div style={styles.viewport}>
-      {/* Leaflet dark styles */}
       <style>{`
-        .leaflet-container { background: #1F2937; }
-        .leaflet-popup-content { color: #1F2937; }
+        .leaflet-container { 
+          background: #f5f5f5;
+        } {
+          filter: hue-rotate(200deg) saturate(1.8) brightness(0.8) contrast(1.2);
+        }
+        
+        /* Enhanced popup styling */
+        .leaflet-popup-content-wrapper {
+          background: rgba(15, 23, 42, 0.95);
+          backdrop-filter: blur(8px);
+          border: 1px solid #3B82F6;
+          border-radius: 10px;
+          box-shadow: 0 5px 25px rgba(0,0,0,0.4);
+          transition: all 0.3s ease;
+        }
+        
+        .leaflet-popup-content {
+          color: #E2E8F0;
+          margin: 12px 16px;
+          line-height: 1.5;
+          font-size: 13px;
+        }
+        
+        .leaflet-popup-tip {
+          background: rgba(15, 23, 42, 0.95);
+          border: 1px solid #3B82F6;
+          border-top-color: transparent !important;
+          border-left-color: transparent !important;
+        }
+        
+        /* Enhanced zoom controls */
+        .leaflet-bar {
+          box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+          border: none !important;
+          border-radius: 6px !important;
+          overflow: hidden;
+        }
+        
+        .leaflet-bar a {
+          width: 32px !important;
+          height: 32px !important;
+          line-height: 32px !important;
+          font-size: 16px !important;
+          border: none !important;
+          border-bottom: 1px solid #334155 !important;
+          transition: all 0.2s !important;
+        }
+        
+        .leaflet-bar a:first-child {
+          border-top-left-radius: 6px !important;
+          border-top-right-radius: 6px !important;
+        }
+        
+        .leaflet-bar a:last-child {
+          border-bottom-left-radius: 6px !important;
+          border-bottom-right-radius: 6px !important;
+          border-bottom: none !important;
+        }
+        
+        /* Fullscreen control */
+        .leaflet-control-fullscreen a {
+          background: #1E293B;
+          color: #E2E8F0;
+          border-radius: 4px;
+          transition: all 0.2s;
+        }
+        
+        .leaflet-control-fullscreen a:hover {
+          background: #3B82F6;
+          color: white;
+        }
+        
+        /* Scale control */
+        .leaflet-control-scale-line {
+          background: rgba(15, 23, 42, 0.8);
+          color: #E2E8F0;
+          border: 1px solid #334155;
+          border-bottom: none;
+          font-size: 11px;
+          padding: 2px 5px;
+          white-space: nowrap;
+          line-height: 1.1;
+        }
+        .leaflet-popup-content { 
+          color: #1F2937;
+          margin: 8px 12px;
+          line-height: 1.4;
+        }
+        .leaflet-popup-content-wrapper {
+          border-radius: 6px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .risk-popup h4 {
+          margin: 0 0 8px 0;
+          color: #dc2626;
+          font-size: 16px;
+          font-weight: 600;
+        }
+        .risk-info {
+          margin: 8px 0;
+          font-size: 13px;
+        }
+        .risk-info strong {
+          color: #111827;
+        }
+        .risk-level {
+          display: inline-block;
+          padding: 2px 8px;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: 600;
+          background-color: #fef2f2;
+          color: #dc2626;
+          margin-bottom: 8px;
+        }
+        .map-legend {
+          position: absolute;
+          bottom: 30px;
+          right: 10px;
+          z-index: 1000;
+          background: rgba(31, 41, 55, 0.9);
+          padding: 10px 14px;
+          border-radius: 6px;
+          color: white;
+          font-size: 12px;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+          border: 1px solid #374151;
+        }
+        .map-legend h4 {
+          margin: 0 0 8px 0;
+          font-size: 13px;
+          color: #f3f4f6;
+        }
+        .legend-item {
+          display: flex;
+          align-items: center;
+          margin-bottom: 6px;
+        }
+        .legend-color {
+          width: 14px;
+          height: 14px;
+          border-radius: 50%;
+          margin-right: 8px;
+          position: relative;
+        }
+        .pulse::after {
+          content: '';
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          top: 0;
+          left: 0;
+          background: inherit;
+          border-radius: 50%;
+          animation: pulse 2s infinite;
+        }
         .leaflet-control-zoom a {
           background: #334155;
           color: #FFFFFF;
@@ -363,14 +567,148 @@ export default function ChatScreen() {
                       {m.content}
                     </div>
                   );
-                  
+
                 case 'text':
                 default:
+                  // Extract numbers from message content
+                  const numbers = m.content.match(/\b\d+(?:\.\d+)?\b/g)?.map(Number) || [];
+                  const hasNumbers = numbers.length > 0;
+                  
+                  // Only show chart if we have at least 2 numbers
+                  const showChart = hasNumbers && numbers.length >= 2;
+                  
+                  // Prepare chart data for Recharts
+                  const chartData = showChart ? 
+                    numbers.map((value, index) => ({
+                      name: `#${index + 1}`,
+                      value: value
+                    })) : [];
+
                   return (
                     <div key={m.id} style={styles.messageBubbleBot}>
-                      {m.content ? m.content.split("\n").map((line, i) => (
-                        <div key={i} style={{ margin: '4px 0' }}>{line}</div>
-                      )) : null}
+                      {/* Message text */}
+                      <div>
+                        {m.content ? m.content.split("\n").map((line, i) => (
+                          <div key={i} style={{ margin: '4px 0' }}>{line}</div>
+                        )) : null}
+                      </div>
+                      
+                      {/* Chart */}
+                      {showChart && (
+                        <div style={{ 
+                          marginTop: '16px',
+                          backgroundColor: '#1F2937',
+                          borderRadius: '8px',
+                          padding: '12px',
+                          border: '1px solid #374151'
+                        }}>
+                          <div style={{ 
+                            fontSize: '14px', 
+                            color: '#9CA3AF',
+                            marginBottom: '8px',
+                            fontWeight: 500
+                          }}>
+                            Data Visualization
+                          </div>
+                          <div style={{ height: '280px', width: '100%', marginTop: '16px' }}>
+                            <ResponsiveContainer width="100%" height="100%">
+                              <LineChart
+                                data={chartData}
+                                margin={{ top: 20, right: 20, bottom: 20, left: 0 }}
+                              >
+                                <defs>
+                                  {/* Gradient for the area under the line */}
+                                  <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
+                                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.1}/>
+                                  </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+                                <XAxis 
+                                  dataKey="name" 
+                                  stroke="#9CA3AF"
+                                  tick={{ fontSize: 12 }}
+                                  tickLine={{ stroke: '#4B5563' }}
+                                  axisLine={{ stroke: '#4B5563' }}
+                                />
+                                <YAxis 
+                                  stroke="#9CA3AF"
+                                  tick={{ fontSize: 12 }}
+                                  tickLine={{ stroke: 'transparent' }}
+                                  axisLine={{ stroke: '#4B5563' }}
+                                  width={40}
+                                />
+                                <Tooltip 
+                                  contentStyle={{
+                                    backgroundColor: '#1F2937',
+                                    border: '1px solid #4B5563',
+                                    borderRadius: '6px',
+                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                                    padding: '8px 12px'
+                                  }}
+                                  labelStyle={{ 
+                                    color: '#E5E7EB',
+                                    fontWeight: 600,
+                                    marginBottom: '4px'
+                                  }}
+                                  itemStyle={{ 
+                                    color: '#E5E7EB',
+                                    fontSize: '13px',
+                                    padding: '2px 0'
+                                  }}
+                                  formatter={(value) => [value, 'Value']}
+                                  labelFormatter={(label) => `Point: ${label}`}
+                                />
+                                {/* Area under the line */}
+                                <Area 
+                                  type="monotone" 
+                                  dataKey="value" 
+                                  stroke="#3B82F6"
+                                  fillOpacity={1} 
+                                  fill="url(#colorValue)"
+                                  strokeWidth={2}
+                                />
+                                <Line 
+                                  type="monotone" 
+                                  dataKey="value" 
+                                  stroke="#3B82F6" 
+                                  dot={{ 
+                                    fill: '#3B82F6', 
+                                    stroke: '#fff',
+                                    strokeWidth: 2, 
+                                    r: 4,
+                                    fillOpacity: 1
+                                  }}
+                                  activeDot={{ 
+                                    r: 6, 
+                                    stroke: '#fff', 
+                                    strokeWidth: 2,
+                                    fill: '#2563EB'
+                                  }}
+                                  strokeWidth={2}
+                                  name="Value"
+                                />
+                                {/* Threshold line for affected areas */}
+                                {chartData.length > 0 && (
+                                  <ReferenceLine 
+                                    y={Math.max(...chartData.map(item => item.value)) * 0.7} 
+                                    stroke="#EF4444" 
+                                    strokeDasharray="3 3"
+                                    strokeWidth={1.5}
+                                  >
+                                    <Label 
+                                      value="Affected Threshold" 
+                                      position="right" 
+                                      fill="#EF4444"
+                                      style={{ fontSize: '12px' }}
+                                    />
+                                  </ReferenceLine>
+                                )}
+                              </LineChart>
+                            </ResponsiveContainer>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
               }
@@ -438,49 +776,87 @@ export default function ChatScreen() {
                 flexDirection: 'column'
               }}>
                 <MapContainer 
-                  center={LAK_CENTER} 
-                  zoom={6} 
-                  style={{ 
-                    flex: 1,
-                    width: '100%',
-                    minHeight: '400px'
-                  }}
-                  whenCreated={mapInstance => {
-                    // Force update the map size when it becomes visible
-                    setTimeout(() => {
-                      mapInstance.invalidateSize();
-                    }, 100);
+                  center={LAK_CENTER}
+                  zoom={6}
+                  style={{ height: "100%", width: "100%" }}
+                  whenCreated={(mapInstance) => {
+                    mapRef.current = mapInstance;
+                    // Add scale control
+                    L.control.scale().addTo(mapInstance);
+                    // Update map size when it becomes visible
+                    setTimeout(() => mapInstance.invalidateSize(), 100);
                   }}
                 >
                   <TileLayer
-                    url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
-                    attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                   />
-                  {/* Tsunami Risk Markers */}
+                  
+                  {/* High Risk Area Markers */}
                   {tsunamiRiskLocations.map((location, index) => (
-                    <Marker 
-                      key={`tsunami-${index}`}
-                      position={location.coords}
-                      icon={redIcon}
-                    >
+                    <Marker key={`tsunami-${index}`} position={location.coords} icon={createMarkerIcon()}>
                       <Popup>
-                        <div style={{ minWidth: 160 }}>
-                          <div style={{ 
-                            fontWeight: 600, 
-                            marginBottom: 4,
-                            color: '#dc2626'
-                          }}>
+                        <div style={{ padding: '8px', minWidth: '180px' }}>
+                          <h4 style={{ margin: '0 0 8px', color: '#dc2626' }}>
                             {location.name}
+                          </h4>
+                          <div style={{
+                            background: 'linear-gradient(135deg, rgba(255, 90, 95, 0.15) 0%, rgba(255, 90, 95, 0.2) 100%)',
+                            color: '#FF5A5F',
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            padding: '5px 12px',
+                            borderRadius: '12px',
+                            textTransform: 'uppercase',
+                            display: 'inline-block',
+                            marginBottom: '14px',
+                            letterSpacing: '0.5px',
+                            border: '1px solid rgba(255, 90, 95, 0.3)',
+                            boxShadow: '0 2px 8px rgba(255, 90, 95, 0.2)'
+                          }}>
+                            High Risk Zone
                           </div>
-                          <div>Tsunami Risk: <strong style={{ color: '#dc2626' }}>High</strong></div>
+                          <div style={{ marginTop: '8px' }}>
+                            <div style={{ marginBottom: '8px' }}>
+                              <div style={{ fontSize: '10px', color: '#64748b' }}>Population</div>
+                              <div style={{ fontWeight: 600, fontSize: '13px' }}>{location.population || 'N/A'}</div>
+                            </div>
+                            <div style={{ marginBottom: '8px' }}>
+                              <div style={{ fontSize: '10px', color: '#64748b' }}>Last Tsunami</div>
+                              <div style={{ fontWeight: 600, fontSize: '13px' }}>{location.lastTsunami || 'N/A'}</div>
+                            </div>
+                          </div>
                         </div>
                       </Popup>
                     </Marker>
                   ))}
-                  <Recenter 
-                    lat={LAK_CENTER[0]} 
-                    lng={LAK_CENTER[1]} 
-                  />
+                  
+                  {/* Simple Legend */}
+                  <div style={{
+                    position: 'absolute',
+                    bottom: '20px',
+                    right: '20px',
+                    backgroundColor: 'white',
+                    padding: '8px',
+                    borderRadius: '4px',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                    zIndex: 1000
+                  }}>
+                    <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>High Risk Areas</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div style={{
+                        width: '12px',
+                        height: '12px',
+                        backgroundColor: '#ef4444',
+                        borderRadius: '50%',
+                        border: '2px solid white',
+                        boxShadow: '0 0 0 1px #ef4444'
+                      }}></div>
+                      <span>High Risk Zone</span>
+                    </div>
+                  </div>
+                  
+                  <Recenter lat={LAK_CENTER[0]} lng={LAK_CENTER[1]} />
                 </MapContainer>
               </div>
             </div>
@@ -498,59 +874,74 @@ const styles = {
     flexDirection: "column",
     height: "100vh",
     width: "100vw",
-    backgroundColor: "#1F2937",
-    color: "#FFFFFF",
-    overflow: "hidden",
+    backgroundColor: "#1F2937"
   },
   nav: {
-    height: 56,
-    flexShrink: 0,
-    display: "flex",
-    alignItems: "center",
-    gap: 12,
-    padding: "0 12px",
-    backgroundColor: "#1F2937",
-    borderBottom: "1px solid #475569",
-    position: "sticky",
+    backgroundColor: "#111827",
+    borderBottom: "1px solid #1F2937",
+    position: 'sticky',
     top: 0,
-    zIndex: 10,
-  },
-  backButton: {
-    width: 36,
-    height: 36,
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    background: "transparent",
-    color: "#FFFFFF",
-    border: "1px solid #475569",
-    borderRadius: 8,
-    cursor: "pointer",
+    zIndex: 50,
+    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+    height: '56px',
+    display: 'flex',
+    alignItems: 'center',
+    padding: '0 20px',
+    gap: '16px' // Added gap between header items
   },
   navTitle: {
-    fontSize: 16,
-    fontWeight: 600,
-    letterSpacing: 0.2,
+    fontSize: '22px',
+    fontWeight: 700,
+    color: '#FFFFFF',
     margin: 0,
-    flex: 1,
-    textAlign: "center",
+    background: 'linear-gradient(90deg, #3B82F6 0%, #8B5CF6 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
+    letterSpacing: '0.5px',
+    padding: '4px 0',
+    textShadow: '0 2px 4px rgba(0,0,0,0.1)'
   },
   main: {
     display: "flex",
     flex: 1,
-    height: 'calc(100vh - 56px)', // Subtract header height
+    height: 'calc(100vh - 56px)', // Subtract header height (56px)
     overflow: 'hidden',
     position: 'relative',
     backgroundColor: '#1F2937',
   },
   chatContainer: {
-    display: 'flex',
-    flexDirection: 'column',
+    display: "flex",
+    flexDirection: "column",
     flex: 1,
     height: '100%',
     position: 'relative',
     overflow: 'hidden',
     backgroundColor: '#1F2937',
+    maxHeight: '100vh',
+  },
+  chatScroll: {
+    flex: 1,
+    overflowY: "auto",
+    padding: "16px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "12px",
+    scrollBehavior: "smooth",
+    '&::-webkit-scrollbar': {
+      width: '8px',
+    },
+    '&::-webkit-scrollbar-track': {
+      background: '#1F2937',
+      borderRadius: '4px',
+    },
+    '&::-webkit-scrollbar-thumb': {
+      background: '#4B5563',
+      borderRadius: '4px',
+      '&:hover': {
+        background: '#6B7280',
+      },
+    },
   },
   messagesContainer: {
     flex: 1,
@@ -609,17 +1000,16 @@ const styles = {
   },
   inputArea: {
     display: "flex",
-    position: 'fixed',
+    position: 'sticky',
     bottom: 0,
-    left: 0,
-    right: '40%', // Account for side panel
     backgroundColor: '#1F2937',
     padding: '12px 16px',
     borderTop: '1px solid #475569',
     zIndex: 10,
     gap: '8px',
     boxSizing: 'border-box',
-    height: '80px',
+    marginTop: 'auto',
+    flexShrink: 0,
   },
   input: {
     flex: 1,
@@ -641,13 +1031,14 @@ const styles = {
     fontSize: "14px"
   },
   sectionHeader: {
-    padding: '12px 16px',
+    padding: '12px 20px',
     backgroundColor: "#1F2937",
     borderBottom: '1px solid #475569',
     display: 'flex',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     alignItems: 'center',
     flexShrink: 0,
+    paddingLeft: '24px', // Added more left padding
   },
   mapToggleButton: {
     backgroundColor: '#2563EB',
